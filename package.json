@@ -4,5 +4,40 @@
   "description": "git分支清理cli工具",
   "main": "index.js",
   "author": "mengshagn918",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "cz": "cz"
+  },
+  "dependencies": {
+    "husky": "^4.3.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
+    "commitizen": "^4.2.1",
+    "cz-conventional-changelog": "3.3.0",
+    "eslint": "^7.10.0",
+    "lint-staged": "^10.4.0",
+    "prettier": "^2.1.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --config .prettierrc.yml --write"
+    ],
+    "*.md": [
+      "prettier --config .prettierrc.yml --write"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
 }
