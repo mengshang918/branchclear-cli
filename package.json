@@ -1,0 +1,8 @@
+{
+  "name": "branchclear-cli",
+  "version": "0.0.0",
+  "description": "git分支清理cli工具",
+  "main": "index.js",
+  "author": "mengshagn918",
+  "license": "MIT"
+}
