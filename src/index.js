@@ -4,7 +4,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-09-29 17:12:40
+ * @Last Modified time: 2020-09-29 18:09:35
  */
 const inquirer = require('inquirer')
 const execa = require('execa')
@@ -61,16 +61,15 @@ const { log } = console
 
             break
           case 'remote':
+            // TODO: git pull ora loading
             // 删除无效的本地远程分支。
             await execa('git', ['remote', 'prune', remoteName])
-            branchRemote = await execa('git', [
-              'branch',
-              '-r',
-              '--merged',
-              main,
-            ]).stdout
+            branchRemote = (
+              await execa('git', ['branch', '-r', '--merged', main])
+            ).stdout
             break
           case 'all':
+            // TODO: git pull ora loading
             // 删除无效的本地远程分支。
             await execa('git', ['remote', 'prune', remoteName])
             branchLocal = (await execa('git', ['branch', '--merged', main]))
