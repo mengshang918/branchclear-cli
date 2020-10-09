@@ -1,3 +1,5 @@
+const { validateReg } = require('./utils')
+
 module.exports = [
   {
     type: 'input',
@@ -36,10 +38,11 @@ module.exports = [
   {
     type: 'input',
     message: '请输入需要匹配的分支正则（不填默认匹配所有）',
-    name: 'branchReg',
+    name: 'branchRegStr',
     when: (answers) => {
       return answers.isReg
     },
+    validate: validateReg,
   },
   {
     type: 'confirm',
@@ -50,9 +53,10 @@ module.exports = [
   {
     type: 'input',
     message: '请输入需要忽略的分支正则（不填默认不忽略分支）',
-    name: 'ignoreReg',
+    name: 'ignoreRegStr',
     when: (answers) => {
       return answers.isIgnore
     },
+    validate: validateReg,
   },
 ]

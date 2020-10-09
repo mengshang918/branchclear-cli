@@ -4,15 +4,18 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-09-29 18:09:35
+ * @Last Modified time: 2020-10-09 17:04:48
  */
 const inquirer = require('inquirer')
 const execa = require('execa')
 const chalk = require('chalk')
+const ora = require('ora')
 const questions = require('./questions')
 const delteBranch = require('./delete')
 const { getBrachList } = require('./utils')
 const { log } = console
+
+const spinner = new ora('统计待删除分支信息')
 
 // 交互方式
 ;(async () => {
@@ -31,9 +34,9 @@ const { log } = console
       clearPosition: 'local',
       remoteName: 'origin',
       isReg: false,
-      branchReg: '',
+      branchRegStr: '',
       isIgnore: false,
-      ignoreReg: '',
+      ignoreRegStr: '',
     }
     // 交互问答
     inquirer
@@ -45,14 +48,15 @@ const { log } = console
           remoteName,
           // user,
           // isReg,
-          // branchReg,
+          // branchRegStr,
           // isIgnore,
-          // ignoreReg
+          // ignoreRegStr
         } = { ...options, ...answers }
         // 待删除的远程分支
         let branchRemote = ''
         // 待删除的本地分支
         let branchLocal = ''
+        spinner.start()
         // 是否会删除远程分支
         switch (clearPosition) {
           case 'local':
@@ -81,10 +85,10 @@ const { log } = console
           default:
             break
         }
-
         delteBranch(getBrachList(branchLocal), getBrachList(branchRemote), {
           ...options,
           ...answers,
+          spinner,
         })
       })
       .catch((error) => {

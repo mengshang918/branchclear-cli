@@ -3,7 +3,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:30
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-09-30 12:41:27
+ * @Last Modified time: 2020-10-09 18:35:27
  */
 /* {
   main: 'master',
@@ -11,13 +11,14 @@
   clearPosition: 'local',
   remoteName: 'origin',
   isReg: false,
-  branchReg: '',
+  branchRegStr: '',
   isIgnore: false,
-  ignoreReg: ''
+  ignoreRegStr: ''
 } */
 
 const execa = require('execa')
 const chalk = require('chalk')
+const inquirer = require('inquirer')
 const { log } = console
 
 /**
@@ -30,72 +31,144 @@ const { log } = console
   clearPosition: 'local', 清除位置
   remoteName: 'origin', 仓库remote
   isReg: false, 是否正则匹配过滤的分支
-  branchReg: '', 正则匹配过滤分支
+  branchRegStr: '', 正则匹配过滤分支
   isIgnore: false, 是否正则匹配忽略分支
-  ignoreReg: '' 正则匹配忽略分支
+  ignoreRegStr: '' 正则匹配忽略分支
 }
  */
 module.exports = async (branchLocal, branchRemote, options) => {
-  const { remoteName, main, user } = options
-  // 需要被删除的本地分支
+  const {
+    remoteName,
+    main,
+    user,
+    spinner,
+    isReg,
+    isIgnore,
+    branchRegStr,
+    ignoreRegStr,
+  } = options
+  // 当前用户的本地分支
   let allLocalBranch = []
-  // 需要被删除的远程分支
+  // 当前用户的远程分支
   let allRemoteBranch = []
   try {
+    // 匹配远程 具有Authored by的
+    const regRemote = new RegExp(
+      `^refs\\/remotes\\/${remoteName}\\/\\S+\\sAuthored\\sby:\\s${user}$`
+    )
+    // 匹配local 具有Authored by的
+    const regLocal = new RegExp(
+      `^refs\\/heads\\/\\S+\\sAuthored\\sby:\\s${user}$`
+    )
     allLocalBranch = (
       await execa('git', [
         'for-each-ref',
         `--format=%(refname)%(if:equals=${user})%(authorname)%(then) Authored by: %(authorname)%(end)`,
         'refs/heads/**',
       ])
-    ).stdout.split(/\n|\r\n/)
+    ).stdout
+      .split(/\n|\r\n/)
+      .filter((item) => regLocal.test(item))
+      .map((item) => {
+        return item
+          .replace('refs/heads/', '')
+          .replace(` Authored by: ${user}`, '')
+      })
     allRemoteBranch = (
       await execa('git', [
         'for-each-ref',
         `--format=%(refname)%(if:equals=${user})%(authorname)%(then) Authored by: %(authorname)%(end)`,
-        'refs/remotes/origin/**',
+        `refs/remotes/${remoteName}/**`,
       ])
-    ).stdout.split(/\n|\r\n/)
+    ).stdout
+      .split(/\n|\r\n/)
+      .filter((item) => regRemote.test(item))
+      .map((item) => {
+        return item
+          .replace('refs/remotes/', '')
+          .replace(` Authored by: ${user}`, '')
+      })
   } catch (error) {
     log(chalk.red(error))
     process.exit(1)
   }
-  // TODO: 先校验当前分支是否存在，不存在跳过。并提示不存在的分支
-  // 本地正则过滤
+
+  spinner.text = '待删除分支统计结束'
+  spinner.stop()
+
+  // 本地正则过滤 过滤当前分支和主分支
   const reg = new RegExp(`^\\*|${main}`)
-  // 远程正则过滤
+  // 远程正则过滤 过滤当前分支和主分支
   const regRemote = new RegExp(`HEAD|${main}`)
-  console.log(reg)
-  branchLocal
-    .filter((item) => !reg.test(item))
-    .map(async (item) => {
-      const res = await execa('git', ['branch', '-D', item])
-      log(res)
+  // 匹配用户输入的正则
+  const branchReg = isReg && eval(branchRegStr)
+  // 忽略用户输入的正则
+  const ignoreReg = isIgnore && eval(ignoreRegStr)
+  // 即将被删除的本地分支
+  const deleteLocalBranch = branchLocal.filter(
+    (item) =>
+      !reg.test(item) &&
+      allLocalBranch.includes(item) &&
+      (!branchReg || branchReg.test(item)) &&
+      (!ignoreReg || !ignoreReg.test(item))
+  )
+  // 即将被删除的远程分支
+  const deleteRemoteBranch = branchRemote.filter(
+    (item) =>
+      !regRemote.test(item) &&
+      allRemoteBranch.includes(item) &&
+      (!branchReg || branchReg.test(item)) &&
+      (!ignoreReg || !ignoreReg.test(item))
+  )
+
+  const questions = []
+  deleteLocalBranch.length > 0 &&
+    questions.push({
+      type: 'checkbox',
+      message: '下列本地分支将被删除（默认全部删除）\n',
+      choices: deleteLocalBranch.map((item) => ({ name: item })),
+      name: 'deleteLocal',
+      default: deleteLocalBranch,
+      pageSize: 20,
     })
-  branchRemote
-    .filter((item) => !regRemote.test(item))
-    .map(async (item) => {
-      const res = await execa('git', [
-        'push',
-        remoteName,
-        '--delete',
-        item.replace(`${remoteName}/`, ''),
-      ])
-      log(res)
+  deleteRemoteBranch.length > 0 &&
+    questions.push({
+      type: 'checkbox',
+      message: '下列远程分支将被删除，默认全部删除',
+      choices: deleteRemoteBranch.map((item) => ({ name: item })),
+      name: 'deleteRemote',
+      default: deleteRemoteBranch,
+      pageSize: 20,
     })
-  log(branchLocal)
-  log(branchRemote)
-  log(allLocalBranch)
-  log(allRemoteBranch)
-  log(options)
+
+  inquirer
+    .prompt(questions)
+    .then((answers) => {
+      const { deleteLocal, deleteRemote } = answers
+      // 删除本地分支
+      deleteLocal &&
+        deleteLocal.length > 0 &&
+        deleteLocal.map(async (item) => {
+          await execa('git', ['branch', '-D', item])
+        })
+      // 删除远程分支
+      deleteRemote &&
+        deleteRemote.length > 0 &&
+        deleteRemote.map(async (item) => {
+          await execa('git', [
+            'push',
+            remoteName,
+            '--delete',
+            item.replace(`${remoteName}/`, ''),
+          ])
+        })
+    })
+    .catch((error) => {
+      log(chalk.red(error))
+      process.exit(1)
+    })
 }
 
 // git for-each-ref --format="%(refname)%(if:equals=jiangxiaowei)%(authorname)%(then) Authored by: %(authorname)%(end)" 'refs/remotes/origin/**'
-// git for-each-ref --format=%(refname)%(if:equals=jiangxiaowei)%(authorname)%(then) Authored by: %(authorname)%(end) 'refs/heads/**'
+// git for-each-ref --format="%(refname)%(if:equals=jiangxiaowei)%(authorname)%(then) Authored by: %(authorname)%(end)" 'refs/heads/**'
 // git for-each-ref --format="%(refname)%(if:equals=jiangxiaowei)%(authorname)%(then) Authored by: %(authorname)%(end)" 'refs/heads/**' 'refs/remotes/origin/**'
-
-// 在过滤有authored by的
-// 匹配远程
-// const regRemote = new RegExp('^refs\\/remotes\\/origin\\/\\S+\\sAuthored\\sby:\\sjiangxiaowei$')
-// // 匹配local
-// const regLocal = new RegExp('^refs\\/heads\\/\\S+\\sAuthored\\sby:\\sjiangxiaowei$')
