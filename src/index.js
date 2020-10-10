@@ -4,7 +4,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-10 17:23:14
+ * @Last Modified time: 2020-10-10 18:35:29
  */
 const fs = require('fs')
 const path = require('path')
@@ -134,6 +134,8 @@ const creaetConfig = (answers) => {
     } else {
       exitConfig()
       // TODO 不使用配置项，直接使用命令
+      // TODO 使用配置项
+      // cli参数优先于文件配置中的选项
     }
   } catch (error) {
     log(chalk.red(error))
