@@ -4,13 +4,12 @@
   "description": "git分支清理cli工具",
   "main": "src/index.js",
   "author": "mengshagn918",
-	"license": "MIT",
-	"bin":{
-		"branchclear":"src/index.js"
-	},
+  "license": "MIT",
+  "bin": {
+    "branchclear": "bin/index.js"
+  },
   "scripts": {
-    "cz": "cz",
-    "test": "node src/index.js"
+    "cz": "cz"
   },
   "dependencies": {
     "chalk": "^4.1.0",
@@ -18,6 +17,7 @@
     "execa": "^4.0.3",
     "husky": "^4.3.0",
     "inquirer": "^7.3.3",
+    "js-yaml": "^3.14.0",
     "ora": "^5.1.0"
   },
   "devDependencies": {

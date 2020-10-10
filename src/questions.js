@@ -1,3 +1,10 @@
+/*
+ * 交互问题
+ * @Author: jiangxiaowei
+ * @Date: 2020-10-10 11:54:57
+ * @Last Modified by:   jiangxiaowei
+ * @Last Modified time: 2020-10-10 11:54:57
+ */
 const { validateReg } = require('./utils')
 
 module.exports = [
