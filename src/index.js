@@ -4,10 +4,10 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-10 18:35:29
+ * @Last Modified time: 2020-10-16 19:30:29
  */
 const fs = require('fs')
-const path = require('path')
+// const path = require('path')
 const inquirer = require('inquirer')
 const execa = require('execa')
 const chalk = require('chalk')
@@ -78,7 +78,7 @@ const startInit = async (options, answers) => {
  */
 const exitConfig = () => {
   // 配置文件不存在，提示init创建
-  !fs.existsSync(path.resolve(__dirname, '.branchclear.yml')) &&
+  !fs.existsSync('./.branchclear.yml') &&
     log(
       chalk.yellow(
         '.branchclear.yml不存在，请手动创建或者branchclear --init [-y]创建\n详细请参考branchclear --help'
@@ -93,7 +93,7 @@ const exitConfig = () => {
  */
 const creaetConfig = (answers) => {
   const data = safeDump(answers, { sortKeys: true })
-  fs.writeFileSync(path.resolve(__dirname, './.branchclear.yml'), data)
+  fs.writeFileSync('./.branchclear.yml', data)
 }
 
 // 初始化
@@ -133,7 +133,6 @@ const creaetConfig = (answers) => {
       yes && startInit(options, answers)
     } else {
       exitConfig()
-      // TODO 不使用配置项，直接使用命令
       // TODO 使用配置项
       // cli参数优先于文件配置中的选项
     }
