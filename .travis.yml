@@ -1,0 +1,11 @@
+;language: node_js
+node_js:
+  - '14'
+branches:
+  only:
+    - master
+cache:
+  yarn: true
+script:
+  - yarn install
+  - GH_TOKEN="${GH_TOKEN}" NPM_TOKEN="${NPM_TOKEN}" yarn semantic-release
