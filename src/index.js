@@ -4,7 +4,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-16 19:30:29
+ * @Last Modified time: 2020-10-16 20:46:15
  */
 const fs = require('fs')
 // const path = require('path')
@@ -12,7 +12,7 @@ const inquirer = require('inquirer')
 const execa = require('execa')
 const chalk = require('chalk')
 const ora = require('ora')
-const { safeDump } = require('js-yaml')
+const { safeDump, safeLoad } = require('js-yaml')
 const initCommander = require('./commander')
 const questions = require('./questions')
 const delteBranch = require('./delete')
@@ -23,10 +23,10 @@ const spinner = new ora('统计待删除分支信息')
 /**
  * 分支删除
  * @param {object} options 兜底值
- * @param {object} answers 配置文件/交互式/参数获取到的对象
+ * @param {object} answers 交互式获取到的对象
+ * @param {object} answers 配置文件获取到的对象
  */
-const startInit = async (options, answers) => {
-  creaetConfig({ ...options, ...answers })
+const startInit = async (options, answers, config) => {
   const {
     main,
     clearPosition,
@@ -36,7 +36,7 @@ const startInit = async (options, answers) => {
     // branchRegStr,
     // isIgnore,
     // ignoreRegStr
-  } = { ...options, ...answers }
+  } = { ...options, ...config, ...answers }
   // 待删除的远程分支
   let branchRemote = ''
   // 待删除的本地分支
@@ -68,6 +68,7 @@ const startInit = async (options, answers) => {
   }
   delteBranch(getBrachList(branchLocal), getBrachList(branchRemote), {
     ...options,
+    ...config,
     ...answers,
     spinner,
   })
@@ -88,12 +89,32 @@ const exitConfig = () => {
 }
 
 /**
- *
+ * 生成配置项
  * @param {*} answers
  */
 const creaetConfig = (answers) => {
   const data = safeDump(answers, { sortKeys: true })
   fs.writeFileSync('./.branchclear.yml', data)
+}
+
+/**
+ * 选用哪种方式生成配置项。直接生成or交互方式生成
+ * @param {boolean} showUI 是否使用交互方式生成配置项
+ * @param {object} options 配置兜底值
+ * @param {object} answers 参数配置值or交互问题配置值
+ */
+const createConfigWay = (showUI, options, answers) => {
+  !showUI
+    ? inquirer
+        .prompt(questions)
+        .then((answers) => {
+          creaetConfig({ ...options, ...answers })
+        })
+        .catch((error) => {
+          log(chalk.red(error))
+          process.exit(1)
+        })
+    : creaetConfig({ ...options, ...answers })
 }
 
 // 初始化
@@ -120,19 +141,26 @@ const creaetConfig = (answers) => {
     // 初始化参数帮助
     const { yes, init, answers } = initCommander(res.stdout)
     if (init) {
-      // 交互问答创建.branchclear.js
-      !yes &&
-        inquirer
-          .prompt(questions)
-          .then(startInit.bind(this, options))
-          .catch((error) => {
-            log(chalk.red(error))
-            process.exit(1)
-          })
-      // 根据兜底值创建配置文件
-      yes && startInit(options, answers)
+      // 判断配置项是否存在，存在则提示确认覆盖;不存在生成
+      fs.existsSync('./.branchclear.yml')
+        ? inquirer
+            .prompt([
+              {
+                type: 'confirm',
+                message: '当前项目已经存在.branchclear.yml文件，是否重新生成？',
+                default: false,
+                name: 'confirmInit',
+              },
+            ])
+            .then((answer) => {
+              !answer.confirmInit && process.exit(1)
+              createConfigWay(yes, options, answers)
+            })
+        : createConfigWay(yes, options, answers)
     } else {
       exitConfig()
+      const config = safeLoad(fs.readFileSync('./.branchclear.yml'))
+      startInit(options, answers, config)
       // TODO 使用配置项
       // cli参数优先于文件配置中的选项
     }
