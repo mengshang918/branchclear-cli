@@ -6242,9 +6242,9 @@ semantic-release-cli@^5.4.0:
     user-home "^2.0.0"
     validator "^12.0.0"
 
-semantic-release@^17.1.2:
+semantic-release@^17.2.1:
   version "17.2.1"
-  resolved "https://registry.npmjs.org/semantic-release/-/semantic-release-17.2.1.tgz#739bad395219110cc30d1ef7029fa2e03e3b4b72"
+  resolved "https://registry.yarnpkg.com/semantic-release/-/semantic-release-17.2.1.tgz#739bad395219110cc30d1ef7029fa2e03e3b4b72"
   integrity sha512-+xbLWsT9NoibeMMJw4te0pbY4q/Z1gt/vzhB0z9RRNGVyqCgQiK5NUJ11eW6etSyPZ9QFeAMnqO2dzscWUTy2w==
   dependencies:
     "@semantic-release/commit-analyzer" "^8.0.0"
