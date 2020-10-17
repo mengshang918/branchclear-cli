@@ -3,7 +3,8 @@
   "version": "0.0.0-development",
   "description": "git分支清理cli工具",
   "main": "src/index.js",
-  "author": "mengshagn918",
+	"author": "mengshagn918",
+	"keywords": ["branch","git","clearbranch","clear","branchclear"],
   "license": "MIT",
   "bin": {
     "branchclear": "bin/index.js"
