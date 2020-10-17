@@ -4,10 +4,9 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-16 20:46:15
+ * @Last Modified time: 2020-10-17 14:36:55
  */
 const fs = require('fs')
-// const path = require('path')
 const inquirer = require('inquirer')
 const execa = require('execa')
 const chalk = require('chalk')
