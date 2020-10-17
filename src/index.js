@@ -4,7 +4,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-17 14:36:55
+ * @Last Modified time: 2020-10-17 16:14:02
  */
 const fs = require('fs')
 const inquirer = require('inquirer')
@@ -160,8 +160,6 @@ const createConfigWay = (showUI, options, answers) => {
       exitConfig()
       const config = safeLoad(fs.readFileSync('./.branchclear.yml'))
       startInit(options, answers, config)
-      // TODO 使用配置项
-      // cli参数优先于文件配置中的选项
     }
   } catch (error) {
     log(chalk.red(error))

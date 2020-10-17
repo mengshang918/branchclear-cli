@@ -40,7 +40,7 @@ branchclear-cli 可以快速清理本地、远程、本地和远程已经合并�
    {
      "husky": {
        "hooks": {
-         "pre-push": "branchclear-cli"
+         "pre-push": "branchclear"
        }
      }
    }
