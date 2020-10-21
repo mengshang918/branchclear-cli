@@ -3,11 +3,12 @@
  * @Author: jiangxiaowei
  * @Date: 2020-10-10 11:54:44
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-10 16:12:42
+ * @Last Modified time: 2020-10-21 19:05:30
  */
 const { program } = require('commander')
+const parseArgs = require('minimist')
 const { version } = require('../package.json')
-const { validateStrIsReg } = require('./utils')
+const { validateStrIsReg, hasKey } = require('./utils')
 
 /**
  * @param {string} gitUser git用户
@@ -42,12 +43,13 @@ module.exports = (gitUser) => {
   ) {
     program.help()
   }
+  const args = parseArgs(process.argv.slice(2))
   return {
     answers: {
-      main,
-      user,
-      clearPosition: position,
-      remoteName: remotename,
+      ...(hasKey(args, ['m', 'main']) && { main }),
+      ...(hasKey(args, ['u', 'user']) && { user }),
+      ...(hasKey(args, ['p', 'position']) && { clearPosition: position }),
+      ...(hasKey(args, ['remote', 'remotename']) && { remoteName: remotename }),
       isReg: !!branchreg,
       ...(!!branchreg && { branchRegStr: branchreg }),
       isIgnore: !!ignorereg,
