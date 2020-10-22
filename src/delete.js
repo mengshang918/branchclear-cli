@@ -3,7 +3,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:30
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-21 19:26:11
+ * @Last Modified time: 2020-10-22 11:51:32
  */
 /* {
   main: 'master',
@@ -92,9 +92,7 @@ module.exports = async (branchLocal, branchRemote, options) => {
     log(chalk.red(error))
     process.exit(1)
   }
-
-  spinner.text = '待删除分支统计结束'
-  spinner.stop()
+  spinner.succeed('待删除分支统计结束')
 
   // 本地正则过滤 过滤当前分支和主分支
   const reg = new RegExp(`^\\*|${main}`)
@@ -149,21 +147,24 @@ module.exports = async (branchLocal, branchRemote, options) => {
       deleteLocal &&
         deleteLocal.length > 0 &&
         deleteLocal.map(async (item) => {
+          spinner.start(`删除本地分支${item}`)
           await execa('git', ['branch', '-D', item])
+          spinner.succeed()
         })
       // 删除远程分支
       deleteRemote &&
         deleteRemote.length > 0 &&
         deleteRemote.map(async (item) => {
-          spinner.start(`开始删除远程分支${item.replace(`${remoteName}/`, '')}`)
+          spinner.start(`删除远程分支${item.replace(`${remoteName}/`, '')}`)
           await execa('git', [
             'push',
             remoteName,
             '--delete',
             item.replace(`${remoteName}/`, ''),
           ])
-          spinner.stop()
+          spinner.succeed()
         })
+      spinner.stop()
     })
     .catch((error) => {
       log(chalk.red(error))

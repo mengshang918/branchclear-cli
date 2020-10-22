@@ -4,7 +4,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-17 16:14:02
+ * @Last Modified time: 2020-10-22 11:58:46
  */
 const fs = require('fs')
 const inquirer = require('inquirer')
@@ -48,16 +48,24 @@ const startInit = async (options, answers, config) => {
 
       break
     case 'remote':
-      // TODO: git pull ora loading
+      spinner.start('git pull')
+      await execa('git', ['pull'])
+      spinner.succeed()
+      spinner.start('删除无效的本地远程分支')
       // 删除无效的本地远程分支。
       await execa('git', ['remote', 'prune', remoteName])
+      spinner.succeed()
       branchRemote = (await execa('git', ['branch', '-r', '--merged', main]))
         .stdout
       break
     case 'all':
-      // TODO: git pull ora loading
+      spinner.start('git pull')
+      await execa('git', ['pull'])
+      spinner.succeed()
+      spinner.start('删除无效的本地远程分支')
       // 删除无效的本地远程分支。
       await execa('git', ['remote', 'prune', remoteName])
+      spinner.succeed()
       branchLocal = (await execa('git', ['branch', '--merged', main])).stdout
       branchRemote = (await execa('git', ['branch', '-r', '--merged', main]))
         .stdout
