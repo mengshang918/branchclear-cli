@@ -3,7 +3,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-10-10 11:54:44
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-21 19:05:30
+ * @Last Modified time: 2020-10-23 15:11:10
  */
 const { program } = require('commander')
 const parseArgs = require('minimist')
@@ -24,6 +24,11 @@ module.exports = (gitUser) => {
     .option('-remote,--remotename <origin>', '远程仓库名字', 'origin')
     .option('--branchreg <RegExp>', '匹配的分支正则')
     .option('--ignorereg <RegExp>', '忽略的分支正则')
+    .option(
+      '-t,--cleartype <all|current|custom>',
+      '删除所有用户合并分支|只删除当前用户分支|删除自定义用户分支',
+      'current'
+    )
     .parse(process.argv)
 
   const {
@@ -33,13 +38,15 @@ module.exports = (gitUser) => {
     init,
     yes,
     main,
+    cleartype,
     user,
     remotename,
   } = program
   if (
     !['local', 'remote', 'all'].includes(position) ||
     (branchreg && !validateStrIsReg(branchreg)) ||
-    (ignorereg && !validateStrIsReg(ignorereg))
+    (ignorereg && !validateStrIsReg(ignorereg)) ||
+    !['all', 'current', 'custom'].includes(cleartype)
   ) {
     program.help()
   }
@@ -48,6 +55,7 @@ module.exports = (gitUser) => {
     answers: {
       ...(hasKey(args, ['m', 'main']) && { main }),
       ...(hasKey(args, ['u', 'user']) && { user }),
+      ...(hasKey(args, ['t', 'cleartype']) && { clearType: cleartype }),
       ...(hasKey(args, ['p', 'position']) && { clearPosition: position }),
       ...(hasKey(args, ['remote', 'remotename']) && { remoteName: remotename }),
       isReg: !!branchreg,

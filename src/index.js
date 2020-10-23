@@ -4,7 +4,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-22 11:58:46
+ * @Last Modified time: 2020-10-23 18:29:43
  */
 const fs = require('fs')
 const inquirer = require('inquirer')
@@ -22,10 +22,10 @@ const spinner = new ora('统计待删除分支信息')
 /**
  * 分支删除
  * @param {object} options 兜底值
- * @param {object} answers 交互式获取到的对象
- * @param {object} answers 配置文件获取到的对象
+ * @param {object} config 配置文件获取到的对象
+ * @param {object} answers 参数方式获取到的对象
  */
-const startInit = async (options, answers, config) => {
+const startInit = async (options, config, answers) => {
   const {
     main,
     clearPosition,
@@ -49,8 +49,13 @@ const startInit = async (options, answers, config) => {
       break
     case 'remote':
       spinner.start('git pull')
-      await execa('git', ['pull'])
-      spinner.succeed()
+      try {
+        await execa('git', ['pull'])
+        spinner.succeed()
+      } catch (error) {
+        log('\n' + error.stderr)
+        spinner.fail('git pull失败,获取的远程分支信息可能不准确')
+      }
       spinner.start('删除无效的本地远程分支')
       // 删除无效的本地远程分支。
       await execa('git', ['remote', 'prune', remoteName])
@@ -60,8 +65,13 @@ const startInit = async (options, answers, config) => {
       break
     case 'all':
       spinner.start('git pull')
-      await execa('git', ['pull'])
-      spinner.succeed()
+      try {
+        await execa('git', ['pull'])
+        spinner.succeed()
+      } catch (error) {
+        log('\n' + error.stderr)
+        spinner.fail('git pull失败,获取的远程分支信息可能不准确')
+      }
       spinner.start('删除无效的本地远程分支')
       // 删除无效的本地远程分支。
       await execa('git', ['remote', 'prune', remoteName])
@@ -78,6 +88,8 @@ const startInit = async (options, answers, config) => {
     ...config,
     ...answers,
     spinner,
+    // 当前git账号
+    currentUser: options.user,
   })
 }
 
@@ -129,12 +141,17 @@ const createConfigWay = (showUI, options, answers) => {
   try {
     // 设置默认git账号。用来控制仅删除当前账号下的分支，避免删除其他人分支
     const res = await execa('git', ['config', 'user.name'])
-    const index = questions.findIndex((item) => item.name === 'user')
-    questions[index].default = res.stdout
-
+    const index = questions.findIndex((item) => item.name === 'clearType')
+    const userIndex = questions.findIndex((item) => item.name === 'user')
+    questions[userIndex].default = res.stdout
+    const i = questions[index].choices.findIndex(
+      (item) => item.value === 'current'
+    )
+    questions[index].choices[i].name = `只删除当前用户(${res.stdout})创建的分支`
     // 兜底值
     const options = {
       main: 'master',
+      clearType: 'current',
       // 默认当前.git 账户
       user: res.stdout,
       // 'local' | 'remote' | 'all'
@@ -167,7 +184,7 @@ const createConfigWay = (showUI, options, answers) => {
     } else {
       exitConfig()
       const config = safeLoad(fs.readFileSync('./.branchclear.yml'))
-      startInit(options, answers, config)
+      startInit(options, config, answers)
     }
   } catch (error) {
     log(chalk.red(error))

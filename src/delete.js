@@ -3,7 +3,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:30
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-22 11:51:32
+ * @Last Modified time: 2020-10-23 18:30:52
  */
 /* {
   main: 'master',
@@ -46,7 +46,10 @@ module.exports = async (branchLocal, branchRemote, options) => {
     isIgnore,
     branchRegStr,
     ignoreRegStr,
+    clearType,
+    currentUser,
   } = options
+  const filterUser = clearType === 'current' ? currentUser : user
   // 当前用户的本地分支
   let allLocalBranch = []
   // 当前用户的远程分支
@@ -54,16 +57,16 @@ module.exports = async (branchLocal, branchRemote, options) => {
   try {
     // 匹配远程 具有Authored by的
     const regRemote = new RegExp(
-      `^refs\\/remotes\\/${remoteName}\\/\\S+\\sAuthored\\sby:\\s${user}$`
+      `^refs\\/remotes\\/${remoteName}\\/\\S+\\sAuthored\\sby:\\s${filterUser}$`
     )
     // 匹配local 具有Authored by的
     const regLocal = new RegExp(
-      `^refs\\/heads\\/\\S+\\sAuthored\\sby:\\s${user}$`
+      `^refs\\/heads\\/\\S+\\sAuthored\\sby:\\s${filterUser}$`
     )
     allLocalBranch = (
       await execa('git', [
         'for-each-ref',
-        `--format=%(refname)%(if:equals=${user})%(authorname)%(then) Authored by: %(authorname)%(end)`,
+        `--format=%(refname)%(if:equals=${filterUser})%(authorname)%(then) Authored by: %(authorname)%(end)`,
         'refs/heads/**',
       ])
     ).stdout
@@ -72,12 +75,12 @@ module.exports = async (branchLocal, branchRemote, options) => {
       .map((item) => {
         return item
           .replace('refs/heads/', '')
-          .replace(` Authored by: ${user}`, '')
+          .replace(` Authored by: ${filterUser}`, '')
       })
     allRemoteBranch = (
       await execa('git', [
         'for-each-ref',
-        `--format=%(refname)%(if:equals=${user})%(authorname)%(then) Authored by: %(authorname)%(end)`,
+        `--format=%(refname)%(if:equals=${filterUser})%(authorname)%(then) Authored by: %(authorname)%(end)`,
         `refs/remotes/${remoteName}/**`,
       ])
     ).stdout
@@ -86,7 +89,7 @@ module.exports = async (branchLocal, branchRemote, options) => {
       .map((item) => {
         return item
           .replace('refs/remotes/', '')
-          .replace(` Authored by: ${user}`, '')
+          .replace(` Authored by: ${filterUser}`, '')
       })
   } catch (error) {
     log(chalk.red(error))
@@ -106,7 +109,7 @@ module.exports = async (branchLocal, branchRemote, options) => {
   const deleteLocalBranch = branchLocal.filter(
     (item) =>
       !reg.test(item) &&
-      allLocalBranch.includes(item) &&
+      (clearType === 'all' || allLocalBranch.includes(item)) &&
       (!branchReg || branchReg.test(item)) &&
       (!ignoreReg || !ignoreReg.test(item))
   )
@@ -114,7 +117,7 @@ module.exports = async (branchLocal, branchRemote, options) => {
   const deleteRemoteBranch = branchRemote.filter(
     (item) =>
       !regRemote.test(item) &&
-      allRemoteBranch.includes(item) &&
+      (clearType === 'all' || allRemoteBranch.includes(item)) &&
       (!branchReg || branchReg.test(item)) &&
       (!ignoreReg || !ignoreReg.test(item))
   )
@@ -146,17 +149,17 @@ module.exports = async (branchLocal, branchRemote, options) => {
       // 删除本地分支
       deleteLocal &&
         deleteLocal.length > 0 &&
-        deleteLocal.map(async (item) => {
+        deleteLocal.map((item) => {
           spinner.start(`删除本地分支${item}`)
-          await execa('git', ['branch', '-D', item])
+          execa.sync('git', ['branch', '-D', item])
           spinner.succeed()
         })
       // 删除远程分支
       deleteRemote &&
         deleteRemote.length > 0 &&
-        deleteRemote.map(async (item) => {
+        deleteRemote.map((item) => {
           spinner.start(`删除远程分支${item.replace(`${remoteName}/`, '')}`)
-          await execa('git', [
+          execa.sync('git', [
             'push',
             remoteName,
             '--delete',
