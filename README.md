@@ -11,6 +11,8 @@ branchclear-cli 可以快速清理本地、远程、本地和远程已经合并�
 2. 初始化配置
    `npx branchclear-cli --init` 初始化配置，也可使用`npx branchclear-cli --init -y`跳过交互生成默认配置。
 
+   ![npx branchclear-cli --init gif图片](./assets/init.gif)
+
    上述命令将会在项目根目录创建`.branchclear.yml`文件
 
    下面为`npx branchclear-cli --init -y`创建的默认`.branchclear.yml`文件
@@ -19,7 +21,9 @@ branchclear-cli 可以快速清理本地、远程、本地和远程已经合并�
    # 只删除正则匹配的分支 正则字符串 isReg必须为true才可设置
    branchRegStr: ''
    # 清除本地、远程、本地和远程分支 local 本地、remote 远程、all 本地和远程
-   clearPosition: local
+   ÷clearPosition: local
+   # 清除分支类型 all 清除所有用户已经合并的分支 current 只删除当前用户已经合并的分支 custom 自定义删除分支的用户
+   clearType: current
    # 忽略的分支正则 isIgnore必须为true才可设置
    ignoreRegStr: ''
    # 是否有忽略的分支
@@ -34,34 +38,33 @@ branchclear-cli 可以快速清理本地、远程、本地和远程已经合并�
    user: mengshang918
    ```
 
-3. 配合 [husky](https://github.com/typicode/husky#readme)，使用[git-push](https://github.com/typicode/husky#readme) 钩子在代码`push`前自动删除已经合并到主分支的分支。
+3. 使用`yarn clear`或者`npm run clear`
 
    ```json
    {
-     "husky": {
-       "hooks": {
-         "pre-push": "exec < /dev/tty && branchclear"
-       }
+     "scripts": {
+       "clear": "branchclear"
      }
    }
    ```
 
+![清除分支交互 gif](./assets/clear.gif)
+
 ## 参数
 
 ```shell
-Usage: branchclear [options]
-
 Options:
-  -V,--version                      当前版本号
-  -y,--yes                          所有选项使用默认值
-  --init                            生成.branchclear.json配置文件
-  -m, --main <master>               主分支名称 (default: "master")
-  -u,--user <user>                  只删除指定git用户创建的分支 (default: git config user.name)
-  -p,--position <local|remote|all>  删除类型 (default: "local")
-  -remote,--remotename <origin>     远程仓库名字 (default: "origin")
-  --branchreg <RegExp>              匹配的分支正则
-  --ignorereg <RegExp>              忽略的分支正则
-  -h, --help                        display help for command`
+  -V,--version                         当前版本号
+  -y,--yes                             所有选项使用默认值
+  --init                               生成.branchclear.json配置文件
+  -m, --main <master>                  主分支名称 (default: "master")
+  -u,--user <user>                     只删除指定git用户创建的分支 (default: "jiangxiaowei")
+  -p,--position <local|remote|all>     删除类型 (default: "local")
+  -remote,--remotename <origin>        远程仓库名字 (default: "origin")
+  --branchreg <RegExp>                 匹配的分支正则
+  --ignorereg <RegExp>                 忽略的分支正则
+  -t,--cleartype <all|current|custom>  删除所有用户合并分支|只删除当前用户分支|删除自定义用户分支 (default: "current")
+  -h, --help                           display help for command
 ```
 
 使用参数前必须先使用`--init`创建`.branchclear.yml`配置文件。
@@ -70,4 +73,8 @@ Options:
 
 ## 提示
 
-当前所在分支不会被删除，主分支不会被删除。正则匹配的分支会（不会）被删除
+当前所在分支不会被删除，主分支不会被删除。正则匹配的分支会/不会被删除
+
+## 规划
+
+[todo](https://github.com/mengshang918/branchclear-cli/projects/1)
