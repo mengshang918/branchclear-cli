@@ -15,6 +15,10 @@
 	"bin": {
 		"branchclear": "bin/index.js"
 	},
+	"files": [
+		"bin",
+		"src"
+	],
 	"scripts": {
 		"cz": "cz",
 		"semantic-release": "semantic-release"
