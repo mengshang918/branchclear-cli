@@ -38,15 +38,33 @@ branchclear-cli 可以快速清理本地、远程、本地和远程已经合并�
    user: mengshang918
    ```
 
-3. 使用`yarn clear`或者`npm run clear`
+3. 使用
 
-   ```json
-   {
-     "scripts": {
-       "clear": "branchclear"
+   - script 脚本使用
+
+     `yarn clear`或者`npm run clear`
+
+     ```json
+     {
+       "scripts": {
+         "clear": "branchclear"
+       }
      }
-   }
-   ```
+     ```
+
+   - 配合 [husky](https://github.com/typicode/husky#readme)，
+
+     使用[git-push](https://github.com/typicode/husky#readme) 钩子在代码`push`前自动删除已经合并到主分支的分支。
+
+     ```json
+     {
+       "husky": {
+         "hooks": {
+           "pre-push": "exec < /dev/tty && branchclear"
+         }
+       }
+     }
+     ```
 
 ![清除分支交互 gif](./assets/clear.gif)
 

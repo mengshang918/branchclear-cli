@@ -3,7 +3,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:30
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-23 18:30:52
+ * @Last Modified time: 2020-12-18 11:02:36
  */
 /* {
   main: 'master',
@@ -159,12 +159,12 @@ module.exports = async (branchLocal, branchRemote, options) => {
         deleteRemote.length > 0 &&
         deleteRemote.map((item) => {
           spinner.start(`删除远程分支${item.replace(`${remoteName}/`, '')}`)
-          execa.sync('git', [
-            'push',
-            remoteName,
-            '--delete',
-            item.replace(`${remoteName}/`, ''),
-          ])
+          execa.commandSync(
+            `git push ${remoteName} --delete ${item.replace(
+              `${remoteName}/`,
+              ''
+            )} --no-verify`
+          )
           spinner.succeed()
         })
       spinner.stop()
