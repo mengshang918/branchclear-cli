@@ -34,7 +34,7 @@ branchclear-cli 可以快速清理本地、远程、本地和远程已经合并�
    main: master
    # 远程仓库名字
    remoteName: origin
-   # 只删除当前帐号创建的分支
+   # 只删除当前帐号创建的分支 默认为git config user.name。注意：只有clearType==='custom'时，才生效
    user: mengshang918
    ```
 

@@ -3,7 +3,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:30
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-12-18 11:02:36
+ * @Last Modified time: 2021-01-11 17:37:03
  */
 /* {
   main: 'master',
@@ -20,6 +20,7 @@ const execa = require('execa')
 const chalk = require('chalk')
 const inquirer = require('inquirer')
 const { log } = console
+const Listr = require('listr')
 
 /**
  *
@@ -147,26 +148,38 @@ module.exports = async (branchLocal, branchRemote, options) => {
     .then((answers) => {
       const { deleteLocal, deleteRemote } = answers
       // 删除本地分支
-      deleteLocal &&
-        deleteLocal.length > 0 &&
-        deleteLocal.map((item) => {
-          spinner.start(`删除本地分支${item}`)
-          execa.sync('git', ['branch', '-D', item])
-          spinner.succeed()
+      if (deleteLocal && deleteLocal.length > 0) {
+        const tasksArr = deleteLocal.map((item) => {
+          return {
+            title: `删除本地分支${item}`,
+            task: () => execa.command(`git branch -D ${item}`),
+          }
         })
+        const tasks = new Listr(tasksArr, { concurrent: true })
+        tasks.run().catch((err) => {
+          throw err
+        })
+      }
+
       // 删除远程分支
-      deleteRemote &&
-        deleteRemote.length > 0 &&
-        deleteRemote.map((item) => {
-          spinner.start(`删除远程分支${item.replace(`${remoteName}/`, '')}`)
-          execa.commandSync(
-            `git push ${remoteName} --delete ${item.replace(
-              `${remoteName}/`,
-              ''
-            )} --no-verify`
-          )
-          spinner.succeed()
+      if (deleteRemote && deleteRemote.length > 0) {
+        const tasksArr = deleteRemote.map((item) => {
+          return {
+            title: `删除远程分支${item.replace(`${remoteName}/`, '')}`,
+            task: () =>
+              execa.command(
+                `git push ${remoteName} --delete ${item.replace(
+                  `${remoteName}/`,
+                  ''
+                )} --no-verify`
+              ),
+          }
         })
+        const tasks = new Listr(tasksArr, { concurrent: true })
+        tasks.run().catch((err) => {
+          throw err
+        })
+      }
       spinner.stop()
     })
     .catch((error) => {
