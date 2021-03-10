@@ -4,7 +4,7 @@
  * @Author: jiangxiaowei
  * @Date: 2020-09-29 16:39:41
  * @Last Modified by: jiangxiaowei
- * @Last Modified time: 2020-10-23 18:29:43
+ * @Last Modified time: 2021-03-10 17:46:02
  */
 const fs = require('fs')
 const inquirer = require('inquirer')
@@ -112,6 +112,9 @@ const exitConfig = () => {
  * @param {*} answers
  */
 const creaetConfig = (answers) => {
+  if (answers.clearType === 'current') {
+    delete answers.user
+  }
   const data = safeDump(answers, { sortKeys: true })
   fs.writeFileSync('./.branchclear.yml', data)
 }
